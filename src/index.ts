@@ -7,7 +7,7 @@ import { prismaClient } from "./prisma.js";
 const honoApp = new Hono()
 
 
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -66,7 +66,7 @@ app.post('/orders', async (req: express.Request, res: express.Response) => {
             res.status(400).json({ error: 'Invalid menu item' });
             return;
         }
-        totalPrice += menuItem.price * item.quantity;
+        totalPrice += Number(menuItem.price) * item.quantity;
         orderItems.push({ menuItemId: item.menuItemId, quantity: item.quantity });
     }
 
