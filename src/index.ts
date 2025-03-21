@@ -97,10 +97,36 @@ app.get('/menu/top-items', async (req: express.Request, res: express.Response) =
     res.json(topItems);
 });
 
+// app.get('/customers/top', async (req: express.Request, res: express.Response) => {
+//     const topCustomers = await prisma.order.groupBy({ by: ['customerId'], _count: { customerId: true }, orderBy: { _count: { customerId: 'desc' } }, take: 5 });
+//     res.json(topCustomers);
+// });
 app.get('/customers/top', async (req: express.Request, res: express.Response) => {
-    const topCustomers = await prisma.order.groupBy({ by: ['customerId'], _count: { customerId: true }, orderBy: { _count: { customerId: 'desc' } }, take: 5 });
-    res.json(topCustomers);
+    try {
+        const topCustomers = await prisma.order.groupBy({
+            by: ['customerId'],
+            _count: { customerId: true },
+            orderBy: { _count: { customerId: 'desc' } },
+            take: 5,
+        });
+
+        const customers = await Promise.all(
+            topCustomers.map(async (customer) => {
+                const customerDetails = await prisma.customer.findUnique({
+                    where: { id: customer.customerId },
+                    select: { id: true, name: true, email: true },
+                });
+                return { ...customerDetails, totalOrders: customer._count.customerId };
+            })
+        );
+
+        res.json(customers);
+    } catch (error) {
+        console.error("Error fetching top customers:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
+    
 
 app.listen(3000, () => {
   console.log('Server is running on http://localhost:3000');
